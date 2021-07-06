@@ -91,37 +91,38 @@ ggplot(data = simobs, aes(x = x, y = y)) +
 ########################################################################
 
 ## -----------------------------------------------------------------------------
-slmfit_out1 <- slmfit(formula = Z ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + F1 + F2, 
-  data = simobs, xcoordcol = 'x', ycoordcol = 'y',
-  CorModel = "Exponential")
+slmfit_out1 <- slmfit(formula = Z ~ X1 + X2 + X3 + X4 + X5 +
+                        X6 + X7 + F1 + F2, 
+                      data = simobs, xcoordcol = 'x',
+                      ycoordcol = 'y',
+                      CorModel = "Exponential")
 
 ## -----------------------------------------------------------------------------
-summary(slmfit_out1) 
+summary(slmfit_out1)
+
+## -----------------------------------------------------------------------------
+plot(slmfit_out1)
+
+## ---- fig.height = 3----------------------------------------------------------
+residraw <- residuals(slmfit_out1)
+qplot(residraw, bins = 20) + xlab("Residuals")
+residcv <- residuals(slmfit_out1, cross.validation = TRUE)
+qplot(residcv, bins = 20) + xlab("CV Residuals")
 
 ## ---- results = "hide"--------------------------------------------------------
-pred_obj <- predict(slmfit_out1)
+pred_obj <- predict(slmfit_out1, conf_level = 0.90)
+pred_obj
 
 ## ---- results = "hide"--------------------------------------------------------
 prediction_df <- pred_obj$Pred_df
-prediction_df[ ,c("x", "y", "Z", "Z_pred_density")]
-
-## ---- warning = FALSE---------------------------------------------------------
-check.variogram(slmfit_out1)
-
-## ---- fig.height = 3----------------------------------------------------------
-qplot(residuals(slmfit_out1), bins = 20) + xlab("Residuals")
-qplot(residuals(slmfit_out1, cross.validation = TRUE), bins = 20) +
-  xlab("CV Residuals")
+head(prediction_df[ ,c("x", "y", "Z", "Z_pred_density")])
 
 ## -----------------------------------------------------------------------------
-get.predinfo(pred_obj, conf_level = 0.90)
-
-## -----------------------------------------------------------------------------
-get.predplot(pred_obj)
+plot(pred_obj)
 
 ## -----------------------------------------------------------------------------
 pred_obj2 <- predict(slmfit_out1, wtscol = "wts2")
-get.predinfo(pred_obj2)
+print(pred_obj2)
 
 ## ---- message = FALSE---------------------------------------------------------
 data(AKmoose)
@@ -169,14 +170,28 @@ slmfit_out_moose <- slmfit(formula = total ~ strat,
   data = moose_df, xcoordcol = 'x', ycoordcol = 'y',
   CorModel = "Exponential")
 summary(slmfit_out_moose)
-check.variogram(slmfit_out_moose)
-qplot(residuals(slmfit_out_moose), bins = 20) + xlab("Residuals")
-qplot(residuals(slmfit_out_moose, cross.validation = TRUE), bins = 20) +
+plot(slmfit_out_moose)
+qplot(residuals(slmfit_out_moose, cross.validation = TRUE),
+      bins = 20) +
   xlab("CV Residuals")
 
 pred_moose <- predict(slmfit_out_moose)
-get.predinfo(pred_moose)
-get.predplot(pred_moose)
+pred_moose
+plot(pred_moose)
+
+## -----------------------------------------------------------------------------
+slmfit_out_moose_strat <- slmfit(formula = total ~ 1, 
+  data = moose_df, xcoordcol = 'x', ycoordcol = 'y',
+  stratacol = "strat",
+  CorModel = "Exponential")
+summary(slmfit_out_moose_strat)
+
+## -----------------------------------------------------------------------------
+predict(slmfit_out_moose_strat)
+
+## -----------------------------------------------------------------------------
+plot(slmfit_out_moose_strat[[1]])
+plot(slmfit_out_moose_strat[[2]])
 
 ## -----------------------------------------------------------------------------
 moose_df$fake_area <- c(rep(1, 700), rep(2, 160))
@@ -190,18 +205,19 @@ summary(slmfit_out_moose_area)
 ## -----------------------------------------------------------------------------
 pred_obj_area <- predict(slmfit_out_moose_area)
 head(pred_obj_area$Pred_df[ ,c("total_pred_density", "total_pred_count",
-  "fake_area")])
+                               "fake_area")])
 tail(pred_obj_area$Pred_df[ ,c("total_pred_density", "total_pred_count",
-  "fake_area")])
+                               "fake_area")])
 
 ## -----------------------------------------------------------------------------
-get.predinfo(pred_obj_area)
+print(pred_obj_area)
 
 ## -----------------------------------------------------------------------------
 data(USlakes)
 
 ## -----------------------------------------------------------------------------
-ggplot(data = USlakes, aes(x = log(DOC_RESULT))) + geom_histogram(bins = 20)
+ggplot(data = USlakes, aes(x = log(DOC_RESULT))) +
+  geom_histogram(bins = 20)
 
 ## -----------------------------------------------------------------------------
 lakes <- USlakes[log(USlakes$DOC_RESULT) < 5, ]
@@ -214,8 +230,10 @@ plot(USlakes$XCOORD, USlakes$YCOORD, pch = 19,
   cex = 2 * log(lakes$DOC_RESULT) / max(log(lakes$DOC_RESULT)))
 
 ## -----------------------------------------------------------------------------
-ggplot(data = lakes, aes(x = RVFPUNDWOODY_RIP, y = log(DOC_RESULT))) +
-  geom_jitter(width = 0.02)
+ggplot(data = lakes,
+       aes(x = RVFPUNDWOODY_RIP, y = log(DOC_RESULT))) +
+  geom_jitter(width = 0.02) +
+  geom_smooth(method = "lm", se = TRUE)
 
 ## -----------------------------------------------------------------------------
 set.seed(2)
@@ -226,15 +244,20 @@ lakeobs[LakeObsID, 'DOC_RESULT'] <- lakes[LakeObsID, 'DOC_RESULT']
 lakeobs$wts <- 1 / nrow(lakeobs)
 
 ## -----------------------------------------------------------------------------
-slmfitout_exp_lakes <- slmfit(formula = DOC_RESULT ~ ELEVATION + RVFPUNDWOODY_RIP + 
-  FCIBIG_LIT + RVFCGNDBARE_RIP + RVFCGNDWOODY_RIP, data = lakeobs, 
-  xcoordcol = 'XCOORD', ycoordcol = 'YCOORD', CorModel = "Exponential")
+slmfitout_exp_lakes <- slmfit(formula = DOC_RESULT ~ ELEVATION +
+                                RVFPUNDWOODY_RIP + FCIBIG_LIT +
+                                RVFCGNDBARE_RIP + RVFCGNDWOODY_RIP,
+                              data = lakeobs, 
+                              xcoordcol = 'XCOORD', ycoordcol = 'YCOORD', CorModel = "Exponential")
 summary(slmfitout_exp_lakes)
 
 ## -----------------------------------------------------------------------------
-slmfitout_sph_lakes <- slmfit(formula = DOC_RESULT ~ ELEVATION + RVFPUNDWOODY_RIP + 
-  FCIBIG_LIT + RVFCGNDBARE_RIP + RVFCGNDWOODY_RIP, data = lakeobs, 
-  xcoordcol = 'XCOORD', ycoordcol = 'YCOORD', CorModel = "Spherical")
+slmfitout_sph_lakes <- slmfit(formula = DOC_RESULT ~ ELEVATION +
+                                RVFPUNDWOODY_RIP + FCIBIG_LIT +
+                                RVFCGNDBARE_RIP + RVFCGNDWOODY_RIP,
+                              data = lakeobs, 
+                              xcoordcol = 'XCOORD', ycoordcol = 'YCOORD',
+                              CorModel = "Spherical")
 summary(slmfitout_sph_lakes)
 
 ## -----------------------------------------------------------------------------
@@ -242,8 +265,9 @@ AIC(slmfitout_exp_lakes)
 AIC(slmfitout_sph_lakes)
 
 ## -----------------------------------------------------------------------------
-pred_exp_lakes <- predict(slmfitout_exp_lakes,  wtscol = "wts")
-get.predinfo(pred_exp_lakes, conf_level = 0.95)
+pred_exp_lakes <- predict(slmfitout_exp_lakes,  wtscol = "wts",
+                          conf_level = 0.95)
+print(pred_exp_lakes)
 mean(lakes$DOC_RESULT)
 
 ## ---- results = "hide"--------------------------------------------------------

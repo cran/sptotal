@@ -70,3 +70,32 @@ test_that("The other (non-exponential) covariance functions work", {
   expect_equivalent(predobj$FPBK_Prediction, predobj_none$FPBK_Prediction,
     tolerance = 20)
 })
+
+
+## stratafit() function test
+exampledataset$stratavar <- "A"
+exampledataset$stratavar[exampledataset$pred2 > -1.0] <- "B"
+exampledataset$stratavar[exampledataset$pred2 > 0.1] <- "C"
+exampledataset$stratavar <- as.factor(exampledataset$stratavar)
+
+stratamod <- stratafit(counts ~ pred1, data = exampledataset,
+                       xcoordcol = "xcoords", ycoordcol = "ycoords",
+                       stratacol = "stratavar")
+
+test_that("stratamod has length equal to the number of strata", {
+  expect_equal(length(stratamod), nlevels(exampledataset$stratavar),
+               tolerance = 1)
+})
+
+stratapred <- predict(stratamod)
+
+test_that("stratification prediction of total does not change", {
+  expect_equal(stratapred$summary_info[nrow(stratapred$summary_info), 1],
+               780.75, tolerance = 1)
+})
+
+test_that("helper functions can be used on stratafit objects", {
+  expect_equal(length(fitted(stratamod[[2]])), 15)
+  expect_equal(AIC(stratamod[[3]]), 93.6, tolerance = 1)
+})
+

@@ -1,10 +1,12 @@
 #' Display basic summary information in a tabular form.
 #'
-#' Creates a list of tables that shows the prediction, standard error, and
+#' \code{get.predinfo()} has been deprecated. Information given
+#' is now provided in the basic print of a
+#' \code{\link{predict.slmfit}()} object. Creates a list of tables that shows the prediction, standard error, and
 #' confidence interval for the prediction, as well as some summary information
 #' about the sample.
 #'
-#' @param x the output of the \code{\link{predict.slmfit}()} function, of class \code{sptotalPredOut}
+#' @param x the output of the \code{\link{predict.slmfit}()} function, of class \code{predict.slmfit}
 #' @param conf_level is the confidence level for a normal-based
 #' confidence interval (default = 0.90).
 #' @return a list of three tables, including \itemize{
@@ -14,16 +16,21 @@
 #' observed average density (equal to the average response if all site areas are
 #' equal).
 #' }
+#' @name get.predinfo-deprecated
+#' @rdname get.predinfo-deprecated
 #' @examples
 #' data(exampledataset) ## load a toy data set
 #' slmobj <- slmfit(formula = counts ~ pred1 + pred2, data = exampledataset,
 #' xcoordcol = 'xcoords', ycoordcol = 'ycoords', areacol = 'areavar')
 #' predobj <- predict(slmobj)
-#' get.predinfo(predobj)
+#' ## Not Run
+#' ## get.predinfo(predobj)
 #' @export
 
 
 get.predinfo <- function(x, conf_level = 0.90) {
+
+  .Deprecated("print.predict.slmfit")
 
   pred.total <- x$FPBK_Prediction
   pred.total.var <- x$PredVar

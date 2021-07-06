@@ -4,11 +4,17 @@
 #'  function to predict the response on the unsampled sites.
 #' The column of the data set that has the response should have numeric values for the observed response
 #' on the sampled sites and `NA` for any site that was not sampled.
+#' Note that there is no \code{newdata} argument to
+#' \code{predict.slmfit()}: any point in space for which a prediction
+#' is needed should be included in the original data set in \code{\link{slmfit}()}
+#' with the response variable as \code{NA}.
 #'
 #' @param object is an object generated from \code{\link{slmfit}()}
-#' @param wtscol is the name of the column that contains the weights for prediction.
+#' @param wtscol is the name of the column that contains the weights
+#' for prediction. The default setting predicts the population total
+#' @param conf_level is the confidence level for a prediction
+#' interval, 0.90 by default
 #' @param ... further arguments passed to or from other methods.
-#'  The default setting predicts the population total
 #' @return a list with \itemize{
 #'   \item the estimated population total
 #'   \item the estimated prediction variance
@@ -25,6 +31,8 @@
 #'        }
 #'    \item vector with estimated covariance parameters
 #'    \item the formula used to fit the model in \code{slmfit()}
+#'    \item the confidence level
+#'    \item the confidence interval bounds
 #' }
 #' @examples
 #' data(exampledataset) ## load a toy data set
@@ -35,7 +43,8 @@
 #' @export
 
 
-predict.slmfit <- function(object, wtscol = NULL, ...) {
+predict.slmfit <- function(object, wtscol = NULL,
+                           conf_level = 0.90,...) {
 
   ## check to make sure object is of class `slmfit`
 
@@ -50,8 +59,8 @@ predict.slmfit <- function(object, wtscol = NULL, ...) {
 
   formula <- object$FPBKpredobj$formula
   data <- object$FPBKpredobj$data
-  xcoordsUTM <- object$FPBKpredobj$xcoordsUTM
-  ycoordsUTM <- object$FPBKpredobj$ycoordsUTM
+  xcoordsTM <- object$FPBKpredobj$xcoordsTM
+  ycoordsTM <- object$FPBKpredobj$ycoordsTM
   covparmests <- object$SpatialParmEsts
   areavar <- object$FPBKpredobj$areavar
 
@@ -60,6 +69,12 @@ predict.slmfit <- function(object, wtscol = NULL, ...) {
     stop("wtscol must be the name of the column (in quotes) in the data used in 'slmfit' that specifies the column with the prediction weights. ")
     }
   }
+
+  # if (is.null(wtscol) == FALSE) {
+  #   if (wtscol %in% names(data) == FALSE) {
+  #   stop("wtscol must be the name of the column (in quotes) in the data used in 'slmfit' that specifies the column with the prediction weights. ")
+  #   }
+  # }
 
 
    if (is.null(wtscol) == TRUE) {
@@ -90,8 +105,8 @@ predict.slmfit <- function(object, wtscol = NULL, ...) {
     stop("None of the values for the response variable are missing (NA). Therefore, prediction cannot be performed for any values of the response.")
   }
 
-  data.sa <- data[ind.sa, ]
-  data.un <- data[ind.un, ]
+  data.sa <- data[ind.sa, , drop = FALSE]
+  data.un <- data[ind.un, , drop = FALSE]
 
   B <- predwts
   Bs <- B[ind.sa]
@@ -113,10 +128,10 @@ predict.slmfit <- function(object, wtscol = NULL, ...) {
   Sigma <- object$FPBKpredobj$covmat
 
   ## used in the Kriging formulas
-  Sigma.us <- Sigma[ind.un, ind.sa]
+  Sigma.us <- Sigma[ind.un, ind.sa, drop = FALSE]
   Sigma.su <- t(Sigma.us)
-  Sigma.ss <- Sigma[ind.sa, ind.sa]
-  Sigma.uu <- Sigma[ind.un, ind.un]
+  Sigma.ss <- Sigma[ind.sa, ind.sa, drop = FALSE]
+  Sigma.uu <- Sigma[ind.un, ind.un, drop = FALSE]
 
        ## give warning if covariance matrix cannot be inverted
       # if(abs(det(Sigma.ss)) <= 1e-21) {
@@ -201,7 +216,7 @@ predict.slmfit <- function(object, wtscol = NULL, ...) {
   ## indicators for whether sites were sampled or not
   ## 3.) a vector of the estimated spatial parameters
 
-  df_out <- data.frame(cbind(data, xcoordsUTM, ycoordsUTM,
+  df_out <- data.frame(cbind(data, xcoordsTM, ycoordsTM,
     preddensity, pred.persite, densvar, countvar, sampind, muhat, areavar))
 
   # data <- data.frame(y = 1:10, x = 2:11)
@@ -209,7 +224,7 @@ predict.slmfit <- function(object, wtscol = NULL, ...) {
   # fullmf <- stats::model.frame(formula, na.action =
   #   stats::na.pass, data = data)
 
-  colnames(df_out) <- c(colnames(data), "xcoordsUTM_", "ycoordsUTM_",
+  colnames(df_out) <- c(colnames(data), "xcoordsTM_", "ycoordsTM_",
     paste(base::all.vars(formula)[1], "_pred_density",
       sep = ""),
     paste(base::all.vars(formula)[1], "_pred_count",
@@ -225,15 +240,24 @@ predict.slmfit <- function(object, wtscol = NULL, ...) {
     paste(base::all.vars(formula)[1], "_areas",
       sep = ""))
 
+  conf_bounds <- as.numeric(FPBKpredictorcount) + c(1, -1) *
+    stats::qnorm((1 - conf_level) / 2) *
+    sqrt(as.numeric(pred.var.count))
+
+  names(conf_bounds) <- c("lower", "upper")
+
   obj <- list(FPBKpredictorcount, pred.var.count,
     df_out,
     as.vector(covparmests),
-    formula = formula)
+    formula = formula,
+    conf_level = conf_level,
+    conf_bounds = conf_bounds)
 
   names(obj) <- c("FPBK_Prediction", "PredVar",
-    "Pred_df", "SpatialParms", "formula")
+    "Pred_df", "SpatialParms", "formula", "conf_level",
+    "conf_bounds")
 
-  class(obj) <- "sptotalPredOut"
+  class(obj) <- "predict.slmfit"
 
   return(obj)
 }

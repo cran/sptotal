@@ -5,20 +5,25 @@
 #' would like to create his or her own plot, he or she can easily do so using
 #' this data frame.
 #'
-#' @param x the output of the \code{\link{predict.slmfit}()} function, of class \code{sptotalPredOut}
+#' @param x the output of the \code{\link{predict.slmfit}()} function, of class \code{predict.slmfit}
 #' @return a plot with x-coordinates on the x-axis and y-coordinates on the y-axis that is coloured by predictions, with points with an X denoting that a site was sampled and filled circles denoting unsampled sites.
+#' @name get.predplot-deprecated
+#' @rdname get.predplot-deprecated
 #' @examples
 #' data(exampledataset) ## load a toy data set
 #' slmobj <- slmfit(formula = counts ~ pred1 + pred2, data = exampledataset,
 #' xcoordcol = 'xcoords', ycoordcol = 'ycoords', areacol = 'areavar')
 #' predobj <- predict(slmobj)
-#' get.predplot(predobj)
+#' ## Not Run
+#' ## get.predplot(predobj)
 #' @importFrom viridis viridis
 #' @import graphics
 #' @import ggplot2
 #' @export
 
 get.predplot = function(x) {
+
+  .Deprecated("plot.predict.slmfit")
 
   pred.vals <- data.frame(x$Pred_df)
   formula <- x$formula
@@ -35,8 +40,8 @@ get.predplot = function(x) {
   pcolname <- paste(base::all.vars(formula)[1], "_pred_count",
     sep = "")
 
-  p3 <- ggplot2::ggplot(data = pred.vals, aes_(x = ~xcoordsUTM_,
-    y = ~ycoordsUTM_, shape = ~sampindfact_)) +  ##)) +
+  p3 <- ggplot2::ggplot(data = pred.vals, aes_(x = ~xcoordsTM_,
+    y = ~ycoordsTM_, shape = ~sampindfact_)) +  ##)) +
     geom_point(aes(colour = preds), size = 4, stroke = 2) +
     #, ##size = pointsize,
     ## stroke = 3) +
