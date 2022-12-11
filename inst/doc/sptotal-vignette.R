@@ -125,55 +125,27 @@ pred_obj2 <- predict(slmfit_out1, wtscol = "wts2")
 print(pred_obj2)
 
 ## ---- message = FALSE---------------------------------------------------------
-data(AKmoose)
-
-## ---- message = FALSE---------------------------------------------------------
-require(rgeos)
-centroids <- data.frame(ID = AKmoose@data,
-  x = rgeos::gCentroid(AKmoose, byid=TRUE)@coords[ ,'x'],
-  y = rgeos::gCentroid(AKmoose, byid=TRUE)@coords[ ,'y'])
+data(AKmoose_df)
+AKmoose_df
 
 ## -----------------------------------------------------------------------------
-xy <- LLtoTM(mean(centroids$x), centroids$y, centroids$x)$xy
-
-## -----------------------------------------------------------------------------
-moose_df <- AKmoose@data ## name the data set moose_df
-head(moose_df) ## look at the first 6 observations
-
-## -----------------------------------------------------------------------------
-moose_df$x = xy[ ,'x']
-moose_df$y = xy[ ,'y']
-
-## ---- results = "hide"--------------------------------------------------------
-cbind(moose_df$x, moose_df$y, centroids$x, centroids$y)
-
-## -----------------------------------------------------------------------------
-head(moose_df)
-str(moose_df$total)
-
-## -----------------------------------------------------------------------------
-moose_df$surveyed <- as.numeric(levels(moose_df$surveyed))[moose_df$surveyed]
-moose_df$total <- as.numeric(levels(moose_df$total))[moose_df$total]
-
-## -----------------------------------------------------------------------------
-moose_df$total[moose_df$surveyed == 0] <- NA
-head(moose_df)
-
-## -----------------------------------------------------------------------------
-ggplot(data = moose_df, aes(x = x, y = y)) +
+ggplot(data = AKmoose_df, aes(x = x, y = y)) +
   geom_point(aes(colour = total), size = 4) +
   scale_colour_viridis_c() +
   theme_bw()
 
 ## ---- results = "hide", fig.keep = "none"-------------------------------------
 slmfit_out_moose <- slmfit(formula = total ~ strat, 
-  data = moose_df, xcoordcol = 'x', ycoordcol = 'y',
+  data = AKmoose_df, xcoordcol = 'x', ycoordcol = 'y',
   CorModel = "Exponential")
 summary(slmfit_out_moose)
 plot(slmfit_out_moose)
-qplot(residuals(slmfit_out_moose, cross.validation = TRUE),
-      bins = 20) +
-  xlab("CV Residuals")
+
+resid_df <- data.frame(residuals = residuals(slmfit_out_moose,
+                                             cross.validation = TRUE))
+ggplot(data = resid_df, aes(x = residuals)) +
+  geom_histogram(colour = "black", fill = "white", bins  = 20) +
+  labs(x = "CV Residuals")
 
 pred_moose <- predict(slmfit_out_moose)
 pred_moose
@@ -181,7 +153,7 @@ plot(pred_moose)
 
 ## -----------------------------------------------------------------------------
 slmfit_out_moose_strat <- slmfit(formula = total ~ 1, 
-  data = moose_df, xcoordcol = 'x', ycoordcol = 'y',
+  data = AKmoose_df, xcoordcol = 'x', ycoordcol = 'y',
   stratacol = "strat",
   CorModel = "Exponential")
 summary(slmfit_out_moose_strat)
@@ -194,11 +166,11 @@ plot(slmfit_out_moose_strat[[1]])
 plot(slmfit_out_moose_strat[[2]])
 
 ## -----------------------------------------------------------------------------
-moose_df$fake_area <- c(rep(1, 700), rep(2, 160))
+AKmoose_df$fake_area <- c(rep(1, 700), rep(2, 160))
 
 ## -----------------------------------------------------------------------------
 slmfit_out_moose_area <- slmfit(formula = total ~ strat, 
-  data = moose_df, xcoordcol = 'x', ycoordcol = 'y',
+  data = AKmoose_df, xcoordcol = 'x', ycoordcol = 'y',
   CorModel = "Exponential", areacol = 'fake_area')
 summary(slmfit_out_moose_area)
 

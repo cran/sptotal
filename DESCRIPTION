@@ -1,12 +1,12 @@
 Package: sptotal
 Type: Package
 Title: Predicting Totals and Weighted Sums from Spatial Data
-Date: 2021-07-01
-Version: 1.0.0
+Date: 2022-12-09
+Version: 1.0.1
 Authors@R: c(
-    person("Higham", "Matt", email = "mhigham@stlawu.edu", role = c("cre", "aut")),
-        person("Ver Hoef", "Jay", email = "jay.verhoef@noaa.gov", role = "aut"),
-    person("Frank", "Bryce", email = "bryce.frank@oregonstate.edu", role = "aut"),
+    person("Matt", "Higham", email = "mhigham@stlawu.edu", role = c("cre", "aut")),
+        person("Jay", "Ver Hoef", email = "jay.verhoef@noaa.gov", role = "aut"),
+    person("Bryce", "Frank", email = "bryce.frank@oregonstate.edu", role = "aut"),
     person("Michael", "Dumelle", email = "Dumelle.Michael@epa.gov", role = "aut",
     comment = c(ORCID = "0000-0002-3393-5529")))
 Depends: R (>= 3.5.0)
@@ -14,18 +14,18 @@ Description: Performs predictions of totals and weighted sums, or finite populat
 License: GPL-2
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.1
 BugReports: https://github.com/highamm/sptotal/issues
-Imports: ggplot2, stats, viridis, graphics, sp
-Suggests: rmarkdown, knitr, testthat, prettydoc, rgeos, tibble, gstat
+Imports: ggplot2, stats, viridis, graphics
+Suggests: rmarkdown, knitr, testthat, prettydoc, tibble, gstat
 VignetteBuilder: knitr, rmarkdown
 URL: https://highamm.github.io/sptotal/index.html
 NeedsCompilation: no
-Packaged: 2021-07-06 16:19:17 UTC; highamm
-Author: Higham Matt [cre, aut],
-  Ver Hoef Jay [aut],
-  Frank Bryce [aut],
+Packaged: 2022-12-11 16:55:21 UTC; highamm
+Author: Matt Higham [cre, aut],
+  Jay Ver Hoef [aut],
+  Bryce Frank [aut],
   Michael Dumelle [aut] (<https://orcid.org/0000-0002-3393-5529>)
-Maintainer: Higham Matt <mhigham@stlawu.edu>
+Maintainer: Matt Higham <mhigham@stlawu.edu>
 Repository: CRAN
-Date/Publication: 2021-07-06 16:40:02 UTC
+Date/Publication: 2022-12-11 22:40:02 UTC
